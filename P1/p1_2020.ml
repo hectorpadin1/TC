@@ -64,7 +64,7 @@ let is_afn (Af (states,input,e_ini,fun_trans,e_fin)) =
 		| Conjunto((Arco_af(e1,e2,a))::en) -> if pertenece ((e1,a)) c
 												then true
 												else aux (agregar ((e1,a)) c) (Conjunto(en))
-												in aux (Conjunto([])) fun_trans;;
+	in aux (Conjunto([])) fun_trans;;
 
 let create_arcs ces (Af (states,input,e_ini,fun_trans,e_fin) as a) =
 	let rec aux acc ft = match ft with
