@@ -98,3 +98,15 @@ let es_afd (Af (_,_,_,arcs,_)) =
 		| Conjunto _ -> true
 	in loop (Conjunto []) arcs
 ;;
+
+let af_of_er expression = match expression with
+	Vacio -> af_of_string ("0; ; 0; 1; 0 0 epsilon;")
+	| Constante (Terminal t) -> af_of_string ("0 1; "^t^"; 0; 1; 0 1 "^t^";")
+	| _ -> raise(Not_found)
+;;
+
+(*
+af_of_er (Vacio);;
+af_of_er (Constante (Terminal ""));;
+af_of_er (Constante (Terminal "aaa"));;
+*)
