@@ -63,6 +63,7 @@ let afd = Af (
 	Conjunto [Estado "1"; Estado "3"]
 );;
 
+
 let es_afne (Af (_,_,_,arcs,_)) =
 	let rec loop = function
 		Conjunto ((Arco_af(_,_,terminal))::tl) ->
@@ -75,12 +76,25 @@ let es_afne (Af (_,_,_,arcs,_)) =
 ;;
 
 let es_afn (Af (_,_,_,arcs,_)) =
+	let rec loop cc boolean = function
+		Conjunto ((Arco_af(s1,_,terminal))::tl) ->
+			if terminal = (Terminal "") then
+				false
+			else if pertenece (s1,terminal) cc then
+				loop (agregar (s1,terminal) cc) true (Conjunto(tl))
+			else
+				loop (agregar (s1,terminal) cc) boolean (Conjunto(tl))
+		| Conjunto _ -> boolean
+	in loop (Conjunto []) false arcs
+;;
+
+let es_afd (Af (_,_,_,arcs,_)) =
 	let rec loop cc = function
 		Conjunto ((Arco_af(s1,_,terminal))::tl) ->
-			if pertenece (s1,terminal) cc then
-				true
+			if (terminal = (Terminal "") || pertenece (s1,terminal) cc) then
+				false
 			else
 				loop (agregar (s1,terminal) cc) (Conjunto(tl))
-		| Conjunto _ -> false
+		| Conjunto _ -> true
 	in loop (Conjunto []) arcs
 ;;
