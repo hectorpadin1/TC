@@ -99,6 +99,31 @@ let es_afd (Af (_,_,_,arcs,_)) =
 	in loop (Conjunto []) arcs
 ;;
 
+let mix_states s1 s2 =
+	let rec loop s1 s2 cc = match (s1,s2) with
+		(Conjunto ((Estado str1)::tl1), Conjunto ((Estado str2)::tl2)) -> loop (Conjunto tl1) (Conjunto tl2) (agregar (Estado ("1"^str2)) (agregar (Estado ("2"^str1)) cc))
+		| _ -> cc
+	in loop s1 s2 (Conjunto [])
+;;
+
+let st_state cc = match cc with
+	Conjunto [] -> raise(Not_found)
+	| Conjunto ((state)::tl) -> state
+;;
+
+let union af1 af2 = match (af1, af2) with
+	(Af(states1,simb1,i_states1,arcs1,f_states1), Af(states2,simb2,i_states2,arcs2,f_states2)) ->
+		Af (
+			agregar (Estado "0") (mix_states states1, states2),
+			agregar (Terminal "") (union simb1 simb2),
+			Conjunto [(Estado "0")],
+			agregar (Arco_af (Estado "0", (st_state states1), Terminal "")) (agregar (Arco_af (Estado "0", (st_state states2), Terminal "")) )
+
+
+		Arco_af (Estado "1", Estado "1", Terminal "b");
+		)
+;;
+
 let af_of_er expression = 
 	let rec loop (Af(states,simb,i_states,arcs,f_states)) count = function
 		Vacio -> (Af(states,simb,i_states,arcs,f_states))
