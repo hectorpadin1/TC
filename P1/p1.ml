@@ -99,14 +99,68 @@ let es_afd (Af (_,_,_,arcs,_)) =
 	in loop (Conjunto []) arcs
 ;;
 
-let af_of_er expression = match expression with
-	Vacio -> af_of_string ("0; ; 0; 1; 0 0 epsilon;")
-	| Constante (Terminal t) -> af_of_string ("0 1; "^t^"; 0; 1; 0 1 "^t^";")
-	| _ -> raise(Not_found)
+let af_of_er expression = 
+	let rec loop (Af(states,simb,i_states,arcs,f_states)) count = function
+		Vacio -> (Af(states,simb,i_states,arcs,f_states))
+		| Constante (t) -> 
+			if (t = Terminal "") then
+				loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [Estado "0"])) (count+1) (Vacio)
+			else
+				let af = Af(
+					agregar (Estado (string_of_int (count+1))) states,
+					agregar t simb,
+					i_states,
+					agregar (Arco_af(Estado (string_of_int count), Estado (string_of_int (count+1)), t)) arcs,
+					agregar (Estado (string_of_int (count+1))) f_states)
+				in loop af (count+1) (Vacio)
+		| Union (er1, er2) -> (Af(states,simb,i_states,arcs,f_states))
+		| Concatenacion (er1, er2) -> (Af(states,simb,i_states,arcs,f_states))
+		| Repeticion er -> (Af(states,simb,i_states,arcs,f_states))
+	in loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [])) 0 expression
 ;;
 
 (*
-af_of_er (Vacio);;
-af_of_er (Constante (Terminal ""));;
-af_of_er (Constante (Terminal "aaa"));;
+let vacio = af_of_er (Vacio);;
+dibuja_af vacio;;
+let a_epsilon = af_of_er (Constante (Terminal ""));;
+dibuja_af a_epsilon;;
+let a0 = af_of_er (Constante (Terminal "a"));;
+dibuja_af a0;;
+*)
+
+
+
+
+
+(*
+
+let af_of_er expression = match expression with
+(*	Vacio -> af_of_string ("0; ; 0; 1; 0 0 epsilon;")*)
+	Vacio -> Af(
+			Conjunto [Estado "0"],
+			Conjunto [],
+			Estado "0",
+			Conjunto [],
+			Conjunto []
+		)
+	(*| Constante (Terminal t) -> af_of_string ("0 1; "^t^"; 0; 1; 0 1 "^t^";")*)
+	| Constante (Terminal t) ->
+		if t = "" then
+			Af(
+				Conjunto [Estado "0"],
+				Conjunto [],
+				Estado "0",
+				Conjunto [],
+				Conjunto [Estado "0"]
+			)
+		else
+			Af(
+				Conjunto [Estado "0"; Estado "1"],
+				Conjunto [Terminal t],
+				Estado "0",
+				Conjunto [Arco_af(Estado "0", Estado "1", Terminal t)],
+				Conjunto [Estado "1"]
+			)
+	| _ -> 
+
 *)
