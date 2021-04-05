@@ -151,6 +151,48 @@ let af_of_er expression =
 	in loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [])) 0 [expression]
 ;;
 
+
+let new_state (Conjunto simbolos) =
+    let nombres = map (function Estado s -> s) simbolos in
+   		let rec aux m =
+        	if mem (string_of_int m) nombres then
+            	aux (m+1)
+         	else
+            	m
+    	in aux (cardinal (Conjunto simbolos))
+;;
+
+
+let af_of_er expression =
+	let rec loop (Af(states,simb,i_states,arcs,f_states)) = function
+		[] -> Af(states,simb,i_states,arcs,agregar (Estado (string_of_int (cardinal states-1))) f_states)
+		| Vacio::tl -> Af(states,simb,i_states,arcs,f_states)
+
+		| Constante (t)::tl ->
+			if (t = Terminal "") then
+				let af = Af(states, agregar t simb, i_states, arcs, f_states) in loop af tl
+			else
+				let af = Af(
+					agregar (Estado (string_of_int (new_state states))) states,
+					agregar t simb,
+					i_states,
+					agregar (Arco_af(Estado (string_of_int ((cardinal states)-1)), Estado (string_of_int (cardinal states)), t)) arcs,
+					f_states)
+				in loop af tl
+		| Union (er1, er2)::tl ->
+			let af = Af(
+				states,
+				simb,
+				i_states,
+				arcs,
+				f_states)
+			in loop af (tl@[er1;er2])
+		| Concatenacion (er1, er2)::tl -> loop (Af(states,simb,i_states,arcs,f_states)) (tl@[er1;er2])
+		| Repeticion er::tl -> loop (Af(states,simb,i_states,arcs,f_states)) (tl@[er])
+	in loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [])) [expression]
+;;
+
+
 (*
 let vacio = af_of_er (Vacio);;
 dibuja_af vacio;;
@@ -160,9 +202,22 @@ let a0 = af_of_er (Constante (Terminal "a"));;
 dibuja_af a0;;
 *)
 
+(*a.be.be*)
+let concat_compleja = Concatenacion (Concatenacion (Constante (Terminal "a"),(Constante (Terminal "be"))),(Constante (Terminal "be")));;
+
+let expr1 = Concatenacion (Constante (Terminal "a"),Repeticion (Union (Constante (Terminal "be"),Constante (Terminal "ce"))));;
+
+let af_vacio = Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto []);;
 
 
-
-
-
+let af_of_er expression =
+	let rec loop = function
+		[] -> Printf.sprintf "sacabo"
+		| Vacio::tl -> Printf.sprintf "vasio\n"^loop tl
+		| Constante (t)::tl -> Printf.sprintf "konstante\n"^loop tl
+		| Union (er1, er2)::tl -> Printf.sprintf "uuuunion\n"^loop (tl@[er1;er2])
+		| Concatenacion (er1, er2)::tl -> Printf.sprintf "concak\n"^loop (tl@[er1;er2])
+		| Repeticion er::tl -> Printf.sprintf "repe\n"^loop (tl@[er])
+	in loop [expression]
+;;
 
