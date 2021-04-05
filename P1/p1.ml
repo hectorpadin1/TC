@@ -187,8 +187,15 @@ let af_of_er expression =
 				arcs,
 				f_states)
 			in loop af (tl@[er1;er2])
-		| Concatenacion (er1, er2)::tl -> loop (Af(states,simb,i_states,arcs,f_states)) (tl@[er1;er2])
-		| Repeticion er::tl -> loop (Af(states,simb,i_states,arcs,f_states)) (tl@[er])
+		| Concatenacion (er1, er2)::tl -> loop (Af(states,simb,i_states,arcs,agregar (Estado (string_of_int (cardinal states-1))) f_states)) (tl@[er1;er2])
+		| Repeticion er::tl -> 
+			let af = Af(
+				states,
+				simb,
+				i_states,
+				agregar (Arco_af(Estado (string_of_int ((cardinal states)-1)), Estado (string_of_int (cardinal states)), (Terminal ""))) (agregar (Arco_af(Estado (string_of_int ((cardinal states)-1)), Estado (string_of_int (cardinal states)), (Terminal ""))) arcs),
+				agregar (Estado (string_of_int (cardinal states-1))) f_states
+			in loop af (tl@[er])
 	in loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [])) [expression]
 ;;
 
@@ -204,6 +211,8 @@ dibuja_af a0;;
 
 (*a.be.be*)
 let concat_compleja = Concatenacion (Concatenacion (Constante (Terminal "a"),(Constante (Terminal "be"))),(Constante (Terminal "be")));;
+
+let rep = Repeticion (Constante (Terminal "a"));;
 
 let expr1 = Concatenacion (Constante (Terminal "a"),Repeticion (Union (Constante (Terminal "be"),Constante (Terminal "ce"))));;
 
