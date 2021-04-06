@@ -99,12 +99,27 @@ let es_afd (Af (_,_,_,arcs,_)) =
 	in loop (Conjunto []) arcs
 ;;
 
-let mix_states s1 s2 =
-	let rec loop s1 s2 cc = match (s1,s2) with
-		(Conjunto ((Estado str1)::tl1), Conjunto ((Estado str2)::tl2)) -> loop (Conjunto tl1) (Conjunto tl2) (agregar (Estado ("1"^str2)) (agregar (Estado ("2"^str1)) cc))
-		| _ -> cc
-	in loop s1 s2 (Conjunto [])
-;;
+
+
+(*EJERCICIO 2*)
+
+let a0 = Af (
+	Conjunto [Estado "0"; Estado "1"],
+	Conjunto [Terminal "a"],
+	Estado "0",
+	Conjunto [Arco_af (Estado "0", Estado "1", Terminal "a")],
+	Conjunto [Estado "1"]
+);;
+
+let a1 = Af (
+	Conjunto [Estado "2"; Estado "3"],
+	Conjunto [Terminal "b"],
+	Estado "2",
+	Conjunto [Arco_af (Estado "2", Estado "3", Terminal "b")],
+	Conjunto [Estado "3"]
+);;
+
+dibuja_af (af_union a0 a1);;
 
 let mix_states s1 s2 =
 	let rec loop i cc = 
@@ -115,100 +130,80 @@ let mix_states s1 s2 =
 	in loop (cardinal s1 + cardinal s2) (Conjunto [])
 ;;
 
-let st_state cc = match cc with
-	Conjunto [] -> raise(Not_found)
-	| Conjunto ((state)::tl) -> state
-;;
-
-let af_union af1 af2 = match (af1, af2) with
-	(Af(states1,simb1,i_states1,arcs1,f_states1), Af(states2,simb2,i_states2,arcs2,f_states2)) ->
-		Af (
-			agregar (Estado "0") (mix_states states1, states2),
-			agregar (Terminal "") (union simb1 simb2),
-			Conjunto [(Estado "0")],
-			agregar (Arco_af (Estado "0", (st_state states1), Terminal "")) (agregar (Arco_af (Estado "0", (st_state states2), Terminal "")) )
-
-
-		Arco_af (Estado "1", Estado "1", Terminal "b");
-		)
-;;
-
-let af_of_er expression =
-	let rec loop (Af(states,simb,i_states,arcs,f_states)) count = function
-		[] -> Af(states,simb,i_states,arcs,agregar (Estado (string_of_int (cardinal states-1))) f_states)
-		| Vacio::tl -> Af(states,simb,i_states,arcs,f_states)
-
-		| Constante (t)::tl ->
-			if (t = Terminal "") then
-				let af = Af(states, agregar t simb, i_states, arcs, f_states) in loop af tl
-			else
-				let af = Af(
-					agregar (Estado (string_of_int (new_state states))) states,
-					agregar t simb,
-					i_states,
-					agregar (Arco_af(Estado (string_of_int ((cardinal states)-1)), Estado (string_of_int (cardinal states)), t)) arcs,
-					f_states)
-				in loop af tl
-		| Union (er1, er2)::tl -> af_union (loop (tl@[er1;er2]))
-		| Concatenacion (er1, er2)::tl -> loop (Af(states,simb,i_states,arcs,agregar (Estado (string_of_int (cardinal states-1))) f_states)) (tl@[er1;er2])
-		| Repeticion er::tl -> 
-			let af = Af(
-				states,
-				simb,
-				i_states,
-				agregar (Arco_af(Estado (string_of_int (cardinal states)-1)), Estado (string_of_int (cardinal states)), (Terminal ""))) (agregar (Arco_af(Estado (string_of_int ((cardinal states)-1)), Estado (string_of_int (cardinal states)), (Terminal ""))) arcs),
-				agregar (Estado (string_of_int (cardinal states-1))) f_states
-			in loop af (tl@[er])
-	in loop 0 [expression]
-;;
-
-
 let new_state (Conjunto simbolos) =
-    let nombres = map (function Estado s -> s) simbolos in
+    let nombres = List.map (function Estado s -> s) simbolos in
    		let rec aux m =
-        	if mem (string_of_int m) nombres then
+        	if List.mem (string_of_int m) nombres then
             	aux (m+1)
          	else
             	m
     	in aux (cardinal (Conjunto simbolos))
 ;;
 
+let fst_state cc = match cc with
+	Conjunto [] -> raise(Not_found)
+	| Conjunto ((state)::tl) -> state
+;;
 
+(*let union_epsilon arcs state i_states1 i_states2 = match (i_states1, i_states2) with*)
+
+let af_union af1 af2 = match (af1, af2) with
+	(Af(states1,simb1,i_state1,arcs1,f_states1), Af(states2,simb2,i_state2,arcs2,f_states2)) ->
+		let states = union states1 states2
+		and st = Estado (string_of_int (new_state (union states1 states2)))
+		in Af(
+			agregar st states,
+			union simb1 simb2,
+			st,
+			agregar (Arco_af(st, i_state2, Terminal "")) (agregar (Arco_af(st, i_state1, Terminal "")) (union arcs1 arcs2)),
+			union f_states1 f_states2 
+		)
+;;
+
+let af_concat af1 af2 = match (af1, af2) with
+	(Af(states1,simb1,i_state1,arcs1,f_states1), Af(states2,simb2,i_state2,arcs2,f_states2)) ->
+		let states = union states1 states2
+		and st = Estado (string_of_int (new_state (union states1 states2)))
+		in Af(
+			agregar st states,
+			union simb1 simb2,
+			st,
+			agregar (Arco_af(st, i_state2, Terminal "")) (agregar (Arco_af(st, i_state1, Terminal "")) (union arcs1 arcs2)),
+			union f_states1 f_states2 
+		)
+;;
+
+let get_states af = match af with
+	(Af(st,_,_,_,_)) -> cardinal st
+;;
+
+(*estoy en este*)
 let af_of_er expression =
-	let rec loop (Af(states,simb,i_states,arcs,f_states)) = function
-		[] -> Af(states,simb,i_states,arcs,agregar (Estado (string_of_int (cardinal states-1))) f_states)
-		| Vacio::tl -> Af(states,simb,i_states,arcs,f_states)
-
+	let rec loop (Af(states,simb,i_state,arcs,f_states)) count = function
+		[] -> Af(states,simb,i_state,arcs,agregar (Estado (string_of_int count)) f_states)
+		| Vacio::tl -> Af(states,simb,i_state,arcs,f_states)
 		| Constante (t)::tl ->
 			if (t = Terminal "") then
-				let af = Af(states, agregar t simb, i_states, arcs, f_states) in loop af tl
+				let af = Af(states, agregar t simb, i_state, arcs, f_states) in loop af (count) tl
 			else
 				let af = Af(
-					agregar (Estado (string_of_int (new_state states))) states,
+					Conjunto [Estado (string_of_int (count)); Estado (string_of_int (count+1))],
 					agregar t simb,
-					i_states,
-					agregar (Arco_af(Estado (string_of_int ((cardinal states)-1)), Estado (string_of_int (cardinal states)), t)) arcs,
-					f_states)
-				in loop af tl
-		| Union (er1, er2)::tl ->
-			let af = Af(
-				states,
-				simb,
-				i_states,
-				arcs,
-				f_states)
-			in loop af (tl@[er1;er2])
-		| Concatenacion (er1, er2)::tl -> loop (Af(states,simb,i_states,arcs,agregar (Estado (string_of_int (cardinal states-1))) f_states)) (tl@[er1;er2])
-		| Repeticion er::tl -> 
-			let af = Af(
-				states,
-				simb,
-				i_states,
-				agregar (Arco_af(Estado (string_of_int (cardinal states)-1)), Estado (string_of_int (cardinal states)), (Terminal ""))) (agregar (Arco_af(Estado (string_of_int ((cardinal states)-1)), Estado (string_of_int (cardinal states)), (Terminal ""))) arcs),
-				agregar (Estado (string_of_int (cardinal states-1))) f_states
-			in loop af (tl@[er])
-	in loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [])) [expression]
+					Estado (string_of_int (count)),
+					Conjunto [Arco_af(Estado (string_of_int count), Estado (string_of_int (count+1)), t)],
+					f_states
+				)
+				in loop af (count+1) tl
+		| Union (er1, er2)::tl -> 
+			let af = loop (Af(states,simb,i_state,arcs,f_states)) (count) (tl@[er1])
+			in af_union af (loop (Af(states,simb,i_state,arcs,f_states)) (get_states af) (tl@[er2]))
+		| Concatenacion (er1, er2)::tl -> loop (Af(states,simb,i_state,arcs,f_states)) (count+1) (tl@[er1;er2])
+		| Repeticion er::tl -> loop (Af(states,simb,i_state,arcs,f_states)) (count+1) (tl@[er])
+	in loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [])) 0 [expression]
 ;;
+
+
+
 
 
 (*
@@ -222,6 +217,9 @@ dibuja_af a0;;
 
 (*a.be.be*)
 let concat_compleja = Concatenacion (Concatenacion (Constante (Terminal "a"),(Constante (Terminal "be"))),(Constante (Terminal "be")));;
+
+let a1 = af_of_er (Union (Constante (Terminal "a"),(Constante (Terminal "be"))));;
+dibuja_af a1;;
 
 let rep = Repeticion (Constante (Terminal "a"));;
 
