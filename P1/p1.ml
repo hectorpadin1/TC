@@ -119,7 +119,20 @@ let a1 = Af (
 	Conjunto [Estado "3"]
 );;
 
-dibuja_af (af_concat a0 a1);;
+let b0 = Af (
+	Conjunto [Estado "5"; Estado "6"; Estado "7"; Estado "8"; Estado "9"],
+	Conjunto [Terminal "b"; Terminal "c"; Terminal ""],
+	Estado "9",
+	Conjunto [
+		Arco_af (Estado "5", Estado "6", Terminal "be");
+		Arco_af (Estado "7", Estado "8", Terminal "ce");
+		Arco_af (Estado "9", Estado "5", Terminal "");
+		Arco_af (Estado "9", Estado "7", Terminal "");
+	],
+	Conjunto [Estado "6"; Estado "8"]
+);;
+
+dibuja_af (af_concat (af_union a0 a1) b0);;
 dibuja_af (af_union a0 a1);;
 
 #load "talf.cma";;
@@ -137,27 +150,34 @@ let mix_states s1 s2 =
 	in loop (cardinal s1 + cardinal s2) (Conjunto [])
 ;;
 
-let new_state (Conjunto simbolos) =
-    let nombres = List.map (function Estado s -> s) simbolos in
-   		let rec aux m =
-        	if List.mem (string_of_int m) nombres then
-            	aux (m+1)
-         	else
-            	m
-    	in aux (cardinal (Conjunto simbolos))
+let next_state (Conjunto simbolos) =
+    let nombres = List.map (function Estado s -> (int_of_string s)) simbolos in
+   		let rec loop i = function
+        	[] -> i+1
+        	| hd::tl -> 
+        		if hd > i then
+		            loop hd tl
+		         else
+		            loop i tl
+    	in loop 0 nombres
 ;;
 
-let fst_state cc = match cc with
-	Conjunto [] -> raise(Not_found)
-	| Conjunto ((state)::tl) -> state
+let card (Af(states,_,_,_,_)) = match states with
+    Conjunto simbolos -> let nombres = List.map (function Estado s -> (int_of_string s)) simbolos in
+   		let rec loop i = function
+        	[] -> i+1
+        	| hd::tl -> 
+        		if hd > i then
+		            loop hd tl
+		         else
+		            loop i tl
+    	in loop 0 nombres
 ;;
-
-(*let union_epsilon arcs state i_states1 i_states2 = match (i_states1, i_states2) with*)
 
 let af_union af1 af2 = match (af1, af2) with
 	(Af(states1,simb1,i_state1,arcs1,f_states1), Af(states2,simb2,i_state2,arcs2,f_states2)) ->
 		let states = union states1 states2
-		and st = Estado (string_of_int (new_state (union states1 states2)))
+		and st = Estado (string_of_int (next_state (union states1 states2)))
 		in Af(
 			agregar st states,
 			union simb1 simb2,
@@ -186,9 +206,19 @@ let af_concat af1 af2 = match (af1, af2) with
 		)
 ;;
 
-let get_states af = match af with
-	(Af(st,_,_,_,_)) -> cardinal st
+let af_rep af = match af with
+	Af(states,simb,i_state,arcs,f_states) ->
+		let st = Estado (string_of_int (next_state states))
+		in Af(
+			agregar st states,
+			simb,
+			st,
+			agregar (Arco_af(st,i_state,Terminal "")) (union (get_final_to_ini f_states st) arcs),
+			Conjunto [st]
+		)
 ;;
+
+let af_vacio = Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto []);;
 
 (*estoy en este*)
 let af_of_er expression =
@@ -209,12 +239,14 @@ let af_of_er expression =
 				in loop af (count+1) tl
 		| Union (er1, er2)::tl ->
 			let af = loop (Af(states,simb,i_state,arcs,f_states)) (count) (tl@[er1])
-			in af_union af (loop (Af(states,simb,i_state,arcs,f_states)) (get_states af) (tl@[er2]))
+			in af_union af (loop (Af(states,simb,i_state,arcs,f_states)) (card af) (tl@[er2]))
 		| Concatenacion (er1, er2)::tl ->
 			let af = loop (Af(states,simb,i_state,arcs,f_states)) (count) (tl@[er1])
-			in af_concat af (loop (Af(states,simb,i_state,arcs,f_states)) (get_states af) (tl@[er2]))
-		| Repeticion er::tl -> loop (Af(states,simb,i_state,arcs,f_states)) (count+1) (tl@[er])
-	in loop (Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto [])) 0 [expression]
+			in af_concat af (loop (Af(states,simb,i_state,arcs,f_states)) (card af) (tl@[er2]))
+		| Repeticion er::tl -> 
+			let af = loop (Af(states,simb,i_state,arcs,f_states)) (count) (tl@[er])
+			in af_rep af
+	in loop af_vacio 0 [expression]
 ;;
 
 
@@ -237,8 +269,20 @@ dibuja_af (af_of_er concat_compleja);;
 let a2 = af_of_er (Union (Constante (Terminal "a"),(Constante (Terminal "be"))));;
 dibuja_af a2;;
 
-let a3 = af_of_er (Concatenacion (Constante (Terminal "a"),(Union (Constante (Terminal "ce"),(Constante (Terminal "be"))))));;
+let a3 = af_of_er (er_of_string "a.(be|ce)");;
 dibuja_af a3;;
+
+let a4 = af_of_er (er_of_string "(be|ce).a");;
+dibuja_af a4;;
+
+let a5 = af_of_er (er_of_string "(a|b).(be|ce)");;
+dibuja_af a5;;
+
+let a5 = af_of_er (er_of_string "(a|b).(be|ce).a.a.(a|b)");;
+dibuja_af a5;;
+
+let a6 = af_of_er (er_of_string "a.(b|c)*");;
+dibuja_af a6;;
 
 let rep = Repeticion (Constante (Terminal "a"));;
 
