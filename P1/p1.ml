@@ -79,7 +79,7 @@ let es_afn (Af (_,_,_,arcs,_)) =
 	let rec loop cc boolean = function
 		Conjunto ((Arco_af(s1,_,terminal))::tl) ->
 			if terminal = (Terminal "") then
-				false
+				loop cc boolean (Conjunto(tl))
 			else if pertenece (s1,terminal) cc then
 				loop (agregar (s1,terminal) cc) true (Conjunto(tl))
 			else
@@ -284,21 +284,5 @@ dibuja_af a5;;
 let a6 = af_of_er (er_of_string "a.(b|c)*");;
 dibuja_af a6;;
 
-let rep = Repeticion (Constante (Terminal "a"));;
-
-let expr1 = Concatenacion (Constante (Terminal "a"),Repeticion (Union (Constante (Terminal "be"),Constante (Terminal "ce"))));;
-
-let af_vacio = Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto []);;
-
-
-let af_of_er expression =
-	let rec loop = function
-		[] -> Printf.sprintf "sacabo"
-		| Vacio::tl -> Printf.sprintf "vasio\n"^loop tl
-		| Constante (t)::tl -> Printf.sprintf "konstante\n"^loop tl
-		| Union (er1, er2)::tl -> Printf.sprintf "uuuunion\n"^loop (tl@[er1;er2])
-		| Concatenacion (er1, er2)::tl -> Printf.sprintf "concak\n"^loop (tl@[er1;er2])
-		| Repeticion er::tl -> Printf.sprintf "repe\n"^loop (tl@[er])
-	in loop [expression]
-;;
-
+let a7 = af_of_er (er_of_string "(b|c)*.a");;
+dibuja_af a7;;
