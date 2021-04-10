@@ -4,64 +4,6 @@ open Conj;;
 open Ergo;;
 open Graf;;
 
-(*
-let afne = af_of_string "0 1 2 3; a b c; 0; 1 3; 0 1 a; 1 1 b; 1 2 a; 2 0 epsilon; 2 3 epsilon; 2 3 c;";;
-*)
-let afne = Af (
-	Conjunto [Estado "0"; Estado "1"; Estado "2"; Estado "3"],
-	Conjunto [Terminal "a"; Terminal "b"; Terminal "c"],
-	Estado "0",
-	Conjunto [
-		Arco_af (Estado "0", Estado "1", Terminal "a");
-		Arco_af (Estado "1", Estado "1", Terminal "b");
-		Arco_af (Estado "1", Estado "2", Terminal "a");
-		Arco_af (Estado "2", Estado "0", Terminal "");
-		Arco_af (Estado "2", Estado "3", Terminal "");
-		Arco_af (Estado "2", Estado "3", Terminal "c")
-	],
-	Conjunto [Estado "1"; Estado "3"]
-);;
-
-(*
-let afn = af_of_string "";;
-*)
-let afn_vacio = Af (
-	Conjunto [Estado "0"; Estado "1"; Estado "2"; Estado "3"],
-	Conjunto [Terminal "a"; Terminal "b"; Terminal "c"],
-	Estado "0",
-	Conjunto [],
-	Conjunto [Estado "1"; Estado "3"]
-);;
-
-(*
-let afn = af_of_string "0 1 2 3; a b c; 0; 1 3; 0 1 a; 1 1 b; 1 2 a; 2 3 c;";;
-*)
-let afn = Af (
-	Conjunto [Estado "0"; Estado "1"; Estado "2"; Estado "3"],
-	Conjunto [Terminal "a"; Terminal "b"; Terminal "c"],
-	Estado "0",
-	Conjunto [
-		Arco_af (Estado "0", Estado "1", Terminal "a");
-		Arco_af (Estado "1", Estado "1", Terminal "b");
-		Arco_af (Estado "1", Estado "2", Terminal "a");
-		Arco_af (Estado "1", Estado "3", Terminal "b");
-		Arco_af (Estado "2", Estado "3", Terminal "c")
-	],
-	Conjunto [Estado "1"; Estado "3"]
-);;
-
-
-let afd = Af (
-	Conjunto [Estado "0"; Estado "1"; Estado "2"; Estado "3"],
-	Conjunto [Terminal "a"; Terminal "b"; Terminal "c"],
-	Estado "0",
-	Conjunto [
-		Arco_af (Estado "0", Estado "1", Terminal "a");
-		Arco_af (Estado "1", Estado "1", Terminal "b");
-		Arco_af (Estado "2", Estado "3", Terminal "c")
-	],
-	Conjunto [Estado "1"; Estado "3"]
-);;
 
 
 let es_afne (Af (_,_,_,arcs,_)) =
@@ -100,46 +42,30 @@ let es_afd (Af (_,_,_,arcs,_)) =
 ;;
 
 
+(*
+
+let afne = af_of_string "0 1 2 3; a b c; 0; 1 3; 0 1 a; 1 1 b; 1 2 a; 2 0 epsilon; 2 3 epsilon; 2 3 c;";;
+let afn = af_of_string "0 1 2 3; a b c; 0; 1 3; 0 1 a; 1 1 b; 1 2 a; 1 3 b; 2 3 c;";;
+let afd = af_of_string "0 1 2 3; a b c; 0; 1 3; 0 1 a; 1 1 b; 1 2 a; 2 3 c;";;
+
+es_afne afne;;
+es_afne afn;;
+es_afne afd;;
+es_afn afd;;
+es_afn afn;;
+es_afn afne;;
+es_afd afne;;
+es_afd afn;;
+es_afd afd;;
+
+*)
+
+
 
 (*EJERCICIO 2*)
 
-let a0 = Af (
-	Conjunto [Estado "0"; Estado "1"],
-	Conjunto [Terminal "a"],
-	Estado "0",
-	Conjunto [Arco_af (Estado "0", Estado "1", Terminal "a")],
-	Conjunto [Estado "1"]
-);;
 
-let a1 = Af (
-	Conjunto [Estado "2"; Estado "3"],
-	Conjunto [Terminal "b"],
-	Estado "2",
-	Conjunto [Arco_af (Estado "2", Estado "3", Terminal "b")],
-	Conjunto [Estado "3"]
-);;
-
-let b0 = Af (
-	Conjunto [Estado "5"; Estado "6"; Estado "7"; Estado "8"; Estado "9"],
-	Conjunto [Terminal "b"; Terminal "c"; Terminal ""],
-	Estado "9",
-	Conjunto [
-		Arco_af (Estado "5", Estado "6", Terminal "be");
-		Arco_af (Estado "7", Estado "8", Terminal "ce");
-		Arco_af (Estado "9", Estado "5", Terminal "");
-		Arco_af (Estado "9", Estado "7", Terminal "");
-	],
-	Conjunto [Estado "6"; Estado "8"]
-);;
-
-dibuja_af (af_concat (af_union a0 a1) b0);;
-dibuja_af (af_union a0 a1);;
-
-#load "talf.cma";;
-open Auto;;
-open Conj;;
-open Ergo;;
-open Graf;;
+let af_vacio = Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto []);;
 
 let mix_states s1 s2 =
 	let rec loop i cc = 
@@ -218,9 +144,7 @@ let af_rep af = match af with
 		)
 ;;
 
-let af_vacio = Af(Conjunto [Estado "0"], Conjunto [], Estado "0", Conjunto [], Conjunto []);;
 
-(*estoy en este*)
 let af_of_er expression =
 	let rec loop (Af(states,simb,i_state,arcs,f_states)) count = function
 		[] -> Af(states,simb,i_state,arcs,agregar (Estado (string_of_int count)) f_states)
@@ -249,40 +173,31 @@ let af_of_er expression =
 	in loop af_vacio 0 [expression]
 ;;
 
-
-
-
-
 (*
 let vacio = af_of_er (Vacio);;
 dibuja_af vacio;;
+
 let a_epsilon = af_of_er (Constante (Terminal ""));;
 dibuja_af a_epsilon;;
+
 let a0 = af_of_er (Constante (Terminal "a"));;
 dibuja_af a0;;
-*)
 
-(*a.be.be*)
-let concat_compleja = Concatenacion (Concatenacion (Constante (Terminal "a"),(Constante (Terminal "be"))),(Constante (Terminal "be")));;
-dibuja_af (af_of_er concat_compleja);;
+let a1 = af_of_er (er_of_string "a.(be|ce)");;
+dibuja_af a1;;
 
-let a2 = af_of_er (Union (Constante (Terminal "a"),(Constante (Terminal "be"))));;
+let a2 = af_of_er (er_of_string "(be|ce).a");;
 dibuja_af a2;;
 
-let a3 = af_of_er (er_of_string "a.(be|ce)");;
+let a3 = af_of_er (er_of_string "(a|b).(be|ce)");;
 dibuja_af a3;;
 
-let a4 = af_of_er (er_of_string "(be|ce).a");;
+let a4 = af_of_er (er_of_string "(a|b).(be|ce).a.a.(a|b)");;
 dibuja_af a4;;
 
-let a5 = af_of_er (er_of_string "(a|b).(be|ce)");;
+let a5 = af_of_er (er_of_string "a.(b|c)*");;
 dibuja_af a5;;
 
-let a5 = af_of_er (er_of_string "(a|b).(be|ce).a.a.(a|b)");;
-dibuja_af a5;;
-
-let a6 = af_of_er (er_of_string "a.(b|c)*");;
+let a6 = af_of_er (er_of_string "(b|c)*.a");;
 dibuja_af a6;;
-
-let a7 = af_of_er (er_of_string "(b|c)*.a");;
-dibuja_af a7;;
+*)
