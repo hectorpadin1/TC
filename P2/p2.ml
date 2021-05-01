@@ -18,7 +18,7 @@ let gic = Gic (
 		Regla_gic (No_terminal "B",
 			[Terminal "b"; Terminal "c"; No_terminal "B"]);
 		Regla_gic (No_terminal "B", [])],
-	No_terminal "S")
+	No_terminal "S");;
 
 let gic = Gic (
 	Conjunto [No_terminal "S"; No_terminal "A"; No_terminal "B"],
