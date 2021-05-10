@@ -46,45 +46,12 @@ let es_fnc (Gic(_, _, reglas, _)) =
 
 (*EJERCICIO 2*)
 
-(*
-	let g = gic_of_string "S A B C; a b; S;S -> A B a | B C;A -> B A | a;B -> C C | b;C -> A B | a;";;
-	cyk (cadena_of_string "b b a b") g;;
-
-	let g = gic_of_string "S A B C; a b; S;S -> A B | B C;A -> B A | a;B -> C C | b;C -> A B | a;";;
-	cyk (cadena_of_string "b b a b") g;;
-	cyk (cadena_of_string "a a b b b b") g;;
-
-	let g = gic_of_string "S A B C; a b c; S;S -> A B | B C;A -> B A C | a;B -> C C | b;C -> A B | c;";;
-	cyk (cadena_of_string "b b a c") g;;
-
-	let g = gic_of_string "S X Y A B C D; a b c d; S;S -> A X | C Y | C D; X -> S B; Y -> S D; A -> a; B -> b; C -> c; D -> d";;
-	cyk (cadena_of_string "b b a c") g;;
-	cyk (cadena_of_string "b b a c") g;;
-*)
-
-(*
-
-pruebas
-
-let lst =
-[
-	[ Conjunto [No_terminal "S"; No_terminal "C"]];
-	[ Conjunto [No_terminal "A"]; Conjunto [No_terminal "S"; No_terminal "C"]];
-	[ Conjunto []; Conjunto [No_terminal "A"; No_terminal "S"]; Conjunto [No_terminal "S"; No_terminal "C"]];
-	[ Conjunto [No_terminal "B"]; Conjunto [No_terminal "B"]; Conjunto [No_terminal "A"; No_terminal "C"]; Conjunto [No_terminal "B"]]
-];;
-let r = [Regla_gic (No_terminal "S", [No_terminal "A"; No_terminal "B"]);
-      Regla_gic (No_terminal "S", [No_terminal "B"; No_terminal "C"]);
-      Regla_gic (No_terminal "A", [No_terminal "B"; No_terminal "A"]);
-      Regla_gic (No_terminal "A", [Terminal "a"]);
-      Regla_gic (No_terminal "B", [No_terminal "C"; No_terminal "C"]);
-      Regla_gic (No_terminal "B", [Terminal "b"]);
-      Regla_gic (No_terminal "C", [No_terminal "A"; No_terminal "B"]);
-            Regla_gic (No_terminal "C", [Terminal "a"])];;
-let c = cadena_of_string "b b a b";;
-*)
 
 exception Parsing_Error;;
+exception Null_String;;
+exception GIC_not_FNC;;
+
+
 
 (*
 # find (Terminal "a") r;;
@@ -183,7 +150,7 @@ let loopi n j lst reglas =
 ;;
 
 
-let cyk inputs (Gic(_, _, reglas_gic, destacado)) =
+let cyk inputs (Gic(nt, t, reglas_gic, destacado)) =
 	let reglas = list_of_conjunto reglas_gic in
 	let primera_fila = init_list reglas inputs
 	and len = (List.length inputs) in
@@ -192,7 +159,64 @@ let cyk inputs (Gic(_, _, reglas_gic, destacado)) =
 			(loopi len j lst reglas)::lst
 		else
 			loop ((loopi len j lst reglas)::lst) (j+1)
-	in let gic = loop [primera_fila] 2
-	in pertenece destacado (List.hd (geti 1 gic))
+	in 
+	if (len=0) then
+		raise (Null_String)
+	else if not (es_fnc (Gic(nt, t, reglas_gic, destacado))) then
+		raise (GIC_not_FNC)
+	else
+		if (len=1) then
+			let conj = find (List.hd inputs) reglas
+			in
+			pertenece destacado conj
+		else
+			let gic = loop [primera_fila] 2
+			in pertenece destacado (List.hd (geti 1 gic))
 ;;
-cyk (cadena_of_string "b b a b") (gic_of_string "S A B C; a b; S;S -> A B | B C;A -> B A | a;B -> C C | b;C -> A B | a;");;
+
+(*
+	Ejemplos para el ejercicio 2
+
+
+	GIC no es FNC
+	let g = gic_of_string "S A B C; a b; S;S -> A B a | B C;A -> B A | a;B -> C C | b;C -> A B | a;";;
+	cyk (cadena_of_string "b b a b") g;;
+
+
+	Cadena vacía
+	cyk [] (gic_of_string "S A B; a b c; S;S -> a A;A -> a b c A;B -> b c B | epsilon;");;
+
+
+	let g = gic_of_string "S A B C; a b; S;S -> A B | B C;A -> B A | a;B -> C C | b;C -> A B | a;";;
+	
+	Sí pertenece
+	cyk (cadena_of_string "b b a b") g;;
+	cyk (cadena_of_string "a b") g;;
+	cyk (cadena_of_string "b a b") g;;
+
+	No Pertenece
+	cyk (cadena_of_string "a") g;;
+
+
+	let g = gic_of_string "S X Y A B C; a b c; S;S -> X Y | Y X; X -> A B | C B; Y -> B B | C C; A -> a; B -> b; C -> c;";;
+
+	Sí pertenece
+	cyk (cadena_of_string "a b c c") g;;
+	cyk (cadena_of_string "c b b b") g;;
+
+	No Pertenece
+	cyk (cadena_of_string "a a b b b b") g;;
+	cyk (cadena_of_string "a") g;;
+
+
+	let g = gic_of_string "S X Y A B C; a b c; S;S -> X Y | Y X | a; X -> A B | C B; Y -> B B | C C; A -> a; B -> b; C -> c;";;
+
+	Sí pertenece
+	cyk (cadena_of_string "a") g;;
+	cyk (cadena_of_string "a b c c") g;;
+	cyk (cadena_of_string "c b b b") g;;
+
+	No Pertenece
+	cyk (cadena_of_string "a a b b b b") g;;
+	cyk (cadena_of_string "b") g;;
+*)
